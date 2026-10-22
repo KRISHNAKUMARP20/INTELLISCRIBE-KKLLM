@@ -740,7 +740,7 @@ app.post('/api/ai/generate-study', async (req, res) => {
 
 // Setup Vite Dev Server integration
 async function startServer() {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 
   if (!isProduction) {
     const vite = await createViteServer({
@@ -752,9 +752,14 @@ async function startServer() {
     app.use(express.static('dist'));
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`IntelliScribe server listening on http://0.0.0.0:${PORT}`);
-  });
+  // Only listen when not in Vercel serverless environment
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`IntelliScribe server listening on http://0.0.0.0:${PORT}`);
+    });
+  }
 }
 
 startServer();
+
+export default app;
