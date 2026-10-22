@@ -7,7 +7,7 @@ export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GOOGLE_CLIENT_ID': JSON.stringify(process.env.GOOGLE_CLIENT_ID || '934407270578-n1896r4oj3c97t9n8bv69hq1phldourh.apps.googleusercontent.com'),
+      'process.env.GOOGLE_CLIENT_ID': JSON.stringify(process.env.GOOGLE_CLIENT_ID || '261247370589-gsajc7vhk3fbpnb4l79kk4n1flusp5hm.apps.googleusercontent.com'),
     },
     resolve: {
       alias: {

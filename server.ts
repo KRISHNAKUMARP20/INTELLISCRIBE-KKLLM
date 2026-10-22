@@ -8,7 +8,19 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '15mb' }));
+
+// Helper to determine accurate public base URL / redirect URI in production or dev
+function getRedirectUri(req: express.Request): string {
+  if (process.env.APP_URL) {
+    const cleanAppUrl = process.env.APP_URL.replace(/\/+$/, '');
+    return `${cleanAppUrl}/api/auth/google/callback`;
+  }
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  return `${protocol}://${host}/api/auth/google/callback`;
+}
 
 // Initialize Gemini Client
 const apiKey = process.env.GEMINI_API_KEY;
@@ -132,7 +144,7 @@ app.delete('/api/db/documents/:id', (req, res) => {
 // Real Google OAuth Entrypoint - Redirects browser directly to Google's sign-in screen
 app.get('/api/auth/google', (req, res) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+  const redirectUri = getRedirectUri(req);
 
   if (!clientId) {
     // If client ID hasn't been set yet in .env, guide the user directly
@@ -161,7 +173,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
   const { code } = req.query;
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+  const redirectUri = getRedirectUri(req);
 
   if (!code) {
     return res.redirect('/?auth_error=google_no_code');

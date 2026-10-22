@@ -15,6 +15,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -24,7 +25,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     // Try Google Identity Services Popup flow first
     const googleClientId =
       (typeof process !== 'undefined' && process.env?.GOOGLE_CLIENT_ID) ||
-      '934407270578-n1896r4oj3c97t9n8bv69hq1phldourh.apps.googleusercontent.com';
+      '261247370589-gsajc7vhk3fbpnb4l79kk4n1flusp5hm.apps.googleusercontent.com';
 
     if (typeof window !== 'undefined' && (window as any).google?.accounts?.oauth2) {
       try {
@@ -36,6 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             if (tokenResponse.error) {
               console.warn('Google Token Client error, falling back:', tokenResponse);
               setOauthLoading(null);
+              // Fallback to server redirect
               window.location.href = '/api/auth/google';
               return;
             }
@@ -59,17 +61,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
                   onClose();
                   return;
                 }
-              } catch (e) {
+              } catch (e: any) {
                 console.error('Error fetching Google userinfo:', e);
+                setAuthError('Could not retrieve Google profile. You can also use Instant Sign In below.');
               }
             }
             setOauthLoading(null);
           },
+          error_callback: (err: any) => {
+            console.warn('GIS error callback:', err);
+            setOauthLoading(null);
+            setAuthError('Google Sign-In popup was closed or origin is not yet whitelisted in Google Cloud. You can use Instant Sign In below or configure your production URL.');
+          }
         });
 
         client.requestAccessToken();
         return;
-      } catch (err) {
+      } catch (err: any) {
         console.warn('GIS Token client failed, fallback to redirect:', err);
       }
     }
@@ -79,6 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       window.location.href = '/api/auth/google';
     } catch {
       setOauthLoading(null);
+      setAuthError('Failed to initiate Google sign in. Try Instant Sign In below.');
     }
   };
 
@@ -130,6 +139,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
               : 'Join thousands of students and researchers mastering documents faster'}
           </p>
         </div>
+
+        {/* Informative alert if popup or domain blocked */}
+        {authError && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+            <div className="leading-relaxed">
+              <span>{authError}</span>
+            </div>
+          </div>
+        )}
 
         {/* Google OAuth Button & Interactive Account Chooser */}
         <div className="mb-6 space-y-3">
