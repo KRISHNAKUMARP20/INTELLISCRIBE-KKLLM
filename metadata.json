@@ -1,0 +1,6 @@
+{
+  "name": "IntelliScribe - AI Document-to-Knowledge Platform",
+  "description": "Transform complex documents into structured courses, interactive flashcards, adaptive quizzes, visual knowledge graphs, and AI tutoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
